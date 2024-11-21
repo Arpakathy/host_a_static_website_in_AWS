@@ -1,13 +1,16 @@
 name: Destroy The Infrastructure 
 
 on:
-  workflow_dispatch:
+    push:
+      branches:
+        - main 
+    workflow_dispatch:
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' }}
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
