@@ -17,7 +17,7 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "my-bucket-ekt9jk2r"          // Paste the id of the bucket we priviously created 
+    bucket         = "my-bucket-2ya13uvf"          // Paste the id of the bucket we priviously created 
     key            = "terraform.tfstate"           // Paste the key of the same bucket
     region         = "us-east-2"
     dynamodb_table = "terraform-locking"   // From the DynamoDB table we previously created to prevent the state file from being corrupted when more than one collaborator executes the Terraform Apply command at the same time
