@@ -3,8 +3,7 @@ name: Deploy Static Website
 on:
   push:
     branches:
-      - main         
-  workflow_dispatch:   # To allow manual trigger for the destroy job  
+      - main     
 
 jobs:
   deploy:
@@ -38,62 +37,3 @@ jobs:
 
     - name: Output website URL
       run: echo "Website URL is $(terraform output INFO)"
-
-    - name: Cache Terraform State #To save the Terraform state file and workspace information between the apply and destroy jobs
-      uses: actions/cache@v4
-      with:
-        path: .terraform
-        key: ${{ runner.os }}-terraform-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-terraform-
-
-  hold_destroy:
-    runs-on: ubuntu-latest
-    needs: deploy # Wait for deploy job
-    steps:
-      - name: Manual Approval
-        id: approval
-        run: |
-          echo "Please approve the destruction of the infrastructure."
-          read -p "Type 'yes' to continue: " confirm
-          if [ "$confirm" != "yes" ]; then
-            echo "Approval denied. Exiting."
-            exit 1
-          fi
-          
-  destroy:
-    runs-on: ubuntu-latest
-    needs: hold_destroy  # Wait for hold_destroy job
-    if: ${{ github.event_name == 'workflow_dispatch' }}  
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.9.8 
-    - name: Restore Terraform State #Persist the workspace between runners
-      uses: actions/cache@v4
-      with:
-        path: .terraform
-        key: ${{ runner.os }}-terraform-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-terraform-
-
-    - name: Terraform Init
-      run: terraform init
-
-    - name: Install-aws-cli
-      uses: unfor19/install-aws-cli-action@v1
-      with:
-          version: 2                         
-          verbose: false                     
-          arch: amd64
-
-    - name: Terraform Destroy
-      run: terraform destroy -auto-approve
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

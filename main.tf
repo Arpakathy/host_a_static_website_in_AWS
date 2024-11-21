@@ -17,11 +17,11 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket = "my-bucket-5lvydyrh"       // Paste the id of the bucket we priviously created 
-    key    = "terraform.tfstate"           // Paste the key of the same bucket
-    region = "us-east-2"
+    bucket         = "my-bucket-5lvydyrh"          // Paste the id of the bucket we priviously created 
+    key            = "terraform.tfstate"           // Paste the key of the same bucket
+    region         = "us-east-2"
     dynamodb_table = "terraform-locking"   // From the DynamoDB table we previously created to prevent the state file from being corrupted when more than one collaborator executes the Terraform Apply command at the same time
-    encrypt = true
+    encrypt        = true
   }
 }
 
@@ -34,7 +34,7 @@ resource "aws_s3_bucket" "bucket1" {
   
 }
 
-# ~~~~~~~~~~~ Configure public access parameters in the bucket ~~~~~~~~
+# ~~~~~~~~~~~ Configure public access parameters in the bucket ~~~~~~~~ #
 resource "aws_s3_bucket_ownership_controls" "rule" {
 
   bucket = aws_s3_bucket.bucket1.id
@@ -60,7 +60,7 @@ resource "aws_s3_bucket_acl" "bucket1-acl" {
 
 }
 
-# ~~~~~~~~~~~~~~~~~~~ Configure The Bucket policy ~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~ Configure The Bucket policy ~~~~~~~~~~~~~~~~~~ #
 
 resource "aws_s3_bucket_policy" "allow_access" {
   bucket = aws_s3_bucket.bucket1.id
