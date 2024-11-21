@@ -6,7 +6,8 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,6 +36,7 @@ jobs:
         run: terraform init
 
       - name: Terraform destroy
+        
         run: terraform destroy -auto-approve
 
         env:
