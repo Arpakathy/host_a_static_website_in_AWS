@@ -7,13 +7,25 @@ terraform {
   }
 }
 
-# ~~~~~~~~~~~~~~~~~~~~ Configure the AWS provider ~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~ Configure the AWS provider ~~~~~~~~~~~~~~~~~~~~ #
 
 provider "aws" {
   region = var.region
 }
  
-# ~~~~~~~~~~~~~~~~~~~~~~~~ Create the bucket ~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~ Configure the remote BACKEND to enable others to work on the same code ~~~~~~~~~~~ #
+
+terraform {
+  backend "s3" {
+    bucket = "my-bucket-5lvydyrh"       // Paste the id of the bucket we priviously created 
+    key    = "terraform.tfstate"           // Paste the key of the same bucket
+    region = "us-east-2"
+    dynamodb_table = "terraform-locking"   // From the DynamoDB table we previously created to prevent the state file from being corrupted when more than one collaborator executes the Terraform Apply command at the same time
+    encrypt = true
+  }
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~ Create the bucket ~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 resource "aws_s3_bucket" "bucket1" {
 
@@ -80,9 +92,7 @@ data "aws_iam_policy_document" "allow_access_from_another_account" {
 resource "null_resource" "upload_files" {
 
   provisioner "local-exec"  {
-      command = <<EOT
-        aws s3 sync ${var.cp-path} s3://${aws_s3_bucket.bucket1.bucket}/ 
-      EOT
+      command = "aws s3 sync ./${var.cp-path} s3://${aws_s3_bucket.bucket1.bucket}/ --region ${var.region} --debug" 
 }
  
 depends_on = [aws_s3_bucket.bucket1 , aws_s3_bucket_policy.allow_access]
@@ -166,5 +176,5 @@ resource "aws_cloudfront_distribution" "web-distribution" {
 }
 
 output "INFO" {
-  value = "AWS Resources  has been provisioned. Go to http://${aws_cloudfront_distribution.web-distribution.domain_name}"
+  value = "AWS Resources  has been provisioned yes. Go to http://${aws_cloudfront_distribution.web-distribution.domain_name}"
 }
