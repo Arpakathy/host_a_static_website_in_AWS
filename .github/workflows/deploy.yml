@@ -1,34 +1,34 @@
-name: Terraform Workflow with Approval
+name: Deploy Static Website
 
 on:
   workflow_dispatch:
 
-# Config the aws credentials and call it here
 env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGION: us-east-2
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
 
 jobs:
 
   # The plan Job - set up the terraform plan and store the plan to the tfapply file as artifact
   plan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.9.8  
+
       - name: Install-aws-cli
         uses: unfor19/install-aws-cli-action@v1
         with:
-          version: 2                         
-          verbose: false                     
-          arch: amd64
-          
+            version: 2                         
+            verbose: false                     
+            arch: amd64
+      
       - name: terraform init & plan
         run: |
             terraform init -input=false
@@ -39,33 +39,32 @@ jobs:
         with:
           name: build-output-tfapply
           path: tfapply
-
-      
-  # The apply-plan Job - Download the plan generated in the previous phase. apply this plan, then save the terraform.tfstate generated as artifact
+          
+# The apply-plan Job - Download the plan generated in the previous phase. apply this plan, then save the terraform.tfstate generated as artifact
   apply-plan:
     runs-on: ubuntu-latest
     needs: plan
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.9.8  
+
+      - name: Install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+            version: 2                         
+            verbose: false                     
+            arch: amd64
             
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: build-output-tfapply
-          
-      - name: Install-aws-cli
-        uses: unfor19/install-aws-cli-action@v1
-        with:
-          version: 2                         
-          verbose: false                     
-          arch: amd64
-          
+
       - name: Use the tfapply artifact
         run: |
           terraform init -input=false
@@ -76,7 +75,7 @@ jobs:
         with:
           name: terraform-state
           path: terraform.tfstate
-
+  
 # The wait-for-approval Job - manual approval implement with the environment approval feature
   wait-for-approval:
     runs-on: ubuntu-latest
@@ -84,29 +83,29 @@ jobs:
     environment:
       name: destroy-approval # Environment requiring manual approval
     steps:
-      - name: Wait for Approval
-        run: echo "Waiting for manual approval to destroy resources..."
-
+    - name: Wait for Approval
+      run: echo "Waiting for manual approval to destroy resources..."
 
 # The destroy Job - Download the Artifact. Here is the terraform.tfstate file generated in the apply step 
   destroy:
     runs-on: ubuntu-latest
     needs: wait-for-approval
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.9.8  
+
       - name: Install-aws-cli
         uses: unfor19/install-aws-cli-action@v1
         with:
-          version: 2                         
-          verbose: false                     
-          arch: amd64
-          
+            version: 2                         
+            verbose: false                     
+            arch: amd64
+
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
