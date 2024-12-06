@@ -1,12 +1,13 @@
-name: Terraform Workflow with Approval
+name: Deploy a static website on AWS S3 Bucket
 
 on:
   workflow_dispatch:
 
 # Config the aws credentials and call it here
 env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    AWS_REGION: us-east-2
 
 jobs:
 
@@ -21,7 +22,14 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
-      
+          
+      - name: Install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+            version: 2                         
+            verbose: false                     
+            arch: amd64
+            
       - name: terraform init & plan
         run: |
             terraform init -input=false
@@ -46,6 +54,13 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
+          
+      - name: Install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+            version: 2                         
+            verbose: false                     
+            arch: amd64    
             
       - name: Download artifact
         uses: actions/download-artifact@v3
@@ -86,7 +101,14 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
-
+          
+      - name: Install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+            version: 2                         
+            verbose: false                     
+            arch: amd64
+            
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
