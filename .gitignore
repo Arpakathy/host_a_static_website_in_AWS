@@ -1,0 +1,10 @@
+# Ignore node_modules folder
+.terraform
+
+# Ignore log files
+
+.terraform.lock.hcl
+
+terraform.tfstate
+
+terraform.tfstate.backup
