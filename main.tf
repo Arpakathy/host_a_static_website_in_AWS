@@ -113,28 +113,19 @@ resource "aws_s3_bucket_website_configuration" "bucket" {
         host_name = "https://${var.www_domain_name}"
   }
 
-  index_document {
-    suffix = var.file-key
-  }
-
-  error_document {
-    key = var.file-key
-  }
-
   depends_on = [aws_s3_bucket.bucket1]
 
 }
 
 # AWS Route53 zone data source with the domain name and private zone set to false
 data "aws_route53_zone" "zone" {
-  provider = aws.use_default_region
   name         = var.domain-name
   private_zone = false
 }
 
 # AWS Route53 record resource for certificate validation with dynamic for_each loop and properties for name, records, type, zone_id, and ttl.
 resource "aws_route53_record" "cert_validation" {
-  provider = aws.use_default_region
+
   for_each = {
     for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
@@ -152,14 +143,16 @@ resource "aws_route53_record" "cert_validation" {
 }
 
 # AWS Route53 record resource for the "www" subdomain. The record uses an "A" type record and an alias to the AWS CloudFront distribution with the specified domain name and hosted zone ID. The target health evaluation is set to false.
+
+
 resource "aws_route53_record" "www" {
   zone_id = data.aws_route53_zone.zone.id
   name    = "www.${var.domain-name}"
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.cdn_static_website.domain_name
-    zone_id                = aws_cloudfront_distribution.cdn_static_website.hosted_zone_id
+    name                   = aws_cloudfront_distribution.web-distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.web-distribution.hosted_zone_id
     evaluate_target_health = false
   }
 }
@@ -171,8 +164,8 @@ resource "aws_route53_record" "apex" {
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.cdn_static_website.domain_name
-    zone_id                = aws_cloudfront_distribution.cdn_static_website.hosted_zone_id
+    name                   = aws_cloudfront_distribution.web-distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.web-distribution.hosted_zone_id
     evaluate_target_health = false
   }
 }
@@ -180,7 +173,7 @@ resource "aws_route53_record" "apex" {
 # ACM certificate resource with the domain name and DNS validation method, supporting subject alternative names
 
 resource "aws_acm_certificate" "cert" {
-  provider = aws.use_default_region
+  
   domain_name               = var.domain-name
   validation_method         = "DNS"
   subject_alternative_names = [var.domain-name]
@@ -193,7 +186,7 @@ resource "aws_acm_certificate" "cert" {
 # ACM certificate validation resource using the certificate ARN and a list of validation record FQDNs
 
 resource "aws_acm_certificate_validation" "cert" {
-  provider = aws.use_default_region
+ 
   certificate_arn         = aws_acm_certificate.cert.arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
 }
